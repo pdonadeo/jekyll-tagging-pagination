@@ -4,7 +4,7 @@ module Jekyll
     safe true
     
     def generate(site)
-      if site.layouts.key? 'tag'
+      if site.layouts.key? site.config['tag_page_layout']
         site.tags.keys.each do |tag|
           paginate(site, tag)
         end
@@ -17,7 +17,8 @@ module Jekyll
 
       (1..num_pages).each do |page|
         pager = TagPager.new(site, page, tag_posts, tag, num_pages)
-        dir = File.join('tags', tag, page > 1 ? "page#{page}" : '')
+        tag_url = tag.downcase.tr(' ', '-')
+        dir = File.join(site.config['tag_page_dir'], tag_url, page > 1 ? "page#{page}" : '')
         page = TagPage.new(site, site.source, dir, tag)
         page.pager = pager
         site.pages << page
@@ -33,8 +34,9 @@ module Jekyll
       @name = 'index.html'
 
       self.process(@name)
-      self.read_yaml(File.join(base, '_layouts'), 'tag.html')
+      self.read_yaml(File.join(base, '_layouts'), site.config['tag_page_layout'] + '.html')
       self.data['tag'] = tag
+      self.data['tag_url'] = tag.downcase.tr(' ', '-')
       #self.data['title'] = "Posts Tagged &ldquo;"+tag+"&rdquo;"
     end
   end
@@ -56,4 +58,9 @@ module Jekyll
     end
   end
 
+  module Filters
+    def tag_slug(tag)
+      tag.downcase.tr(' ', '-')
+    end
+  end
 end
